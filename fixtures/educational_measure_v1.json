@@ -1,0 +1,18 @@
+{
+  "id": "EDU-DOC-2026",
+  "name": "BP assessment documentation",
+  "program": "EDUCATIONAL_MSSP_CONTEXT",
+  "payer": "Fictional Demonstration Contract",
+  "measurement_year": 2026,
+  "collection_type": "synthetic_csv",
+  "version": "1.0.0",
+  "source_url": "https://www.cms.gov/medicare/payment/fee-for-service-providers/shared-savings-program-ssp-acos/quality-measurement-reporting",
+  "source_disclaimer": "Context only. This fictional rule is not a CMS specification.",
+  "population_rules": {"minimum_age": 18, "maximum_age": 85, "condition": "hypertension", "period_start": "2026-01-01", "period_end": "2026-12-31"},
+  "exclusions": ["hospice=true"],
+  "exceptions": [],
+  "numerator_logic": {"status": "completed", "systolic_range": [50, 300], "diastolic_range": [30, 200], "units": "mmHg", "ordered_pressure": true, "date_not_after_encounter": true},
+  "performance_direction": "higher_is_better",
+  "review_status": "internally_reviewed_educational",
+  "small_cell_minimum": 11
+}

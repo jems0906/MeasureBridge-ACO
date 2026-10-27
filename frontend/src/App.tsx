@@ -1,0 +1,212 @@
+import { useEffect, useState } from 'react'
+import { Activity, ArrowDownToLine, ArrowUpRight, Check, ChevronDown, CircleAlert, ClipboardCheck, CloudUpload, FileCheck2, FileText, Gauge, HeartPulse, LayoutDashboard, ListTodo, LoaderCircle, RefreshCw, Search, ShieldCheck, SlidersHorizontal, UserRoundPlus, UsersRound, X } from 'lucide-react'
+import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { api, type Dashboard, type Patient } from './api'
+
+type View = 'overview' | 'queue' | 'point-of-care' | 'reports' | 'equity' | 'imports' | 'registry'
+type Bundle = { dashboard: Dashboard; patients: Patient[]; gaps: Patient[]; reports: any[]; imports: any[]; measures: any[] }
+
+const nav: Array<{ id: View; label: string; icon: typeof LayoutDashboard }> = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'queue', label: 'Care-gap queue', icon: ListTodo },
+  { id: 'point-of-care', label: 'Point of care', icon: Activity },
+  { id: 'reports', label: 'Reporting review', icon: FileCheck2 },
+  { id: 'equity', label: 'Equity view', icon: UsersRound },
+  { id: 'imports', label: 'Data imports', icon: CloudUpload },
+  { id: 'registry', label: 'Measure registry', icon: SlidersHorizontal },
+]
+
+const roleOptions = ['Provider', 'Clinical Assistant', 'ACO Operations', 'EHR/IT']
+const names: Record<string, string> = { Provider: 'Dr. Alex Morgan', 'Clinical Assistant': 'Jamie Chen', 'ACO Operations': 'Sam Rivera', 'EHR/IT': 'Taylor Reed' }
+const barrierLabel: Record<string, string> = { missing_documentation: 'Missing documentation', true_care_gap: 'Assessment not completed', patient_preference: 'Patient preference', data_pipeline_defect: 'Data pipeline defect', eligibility_question: 'Eligibility question' }
+const provenanceByCategory: Record<string, string> = { missing_documentation: 'documentation_completion', true_care_gap: 'simulated_care_event', data_pipeline_defect: 'data_repair' }
+const roleByProvenance: Record<string, string> = { documentation_completion: 'Clinical Assistant', simulated_care_event: 'Provider', data_repair: 'EHR/IT' }
+
+function percent(value: number | null | undefined) { return value == null ? '—' : `${value.toFixed(value % 1 ? 1 : 0)}%` }
+function human(value: string | null | undefined) { return (value ?? 'Unassigned').replace(/_/g, ' ') }
+function statusClass(status: string) { return status.replace(/_/g, '-') }
+
+export default function App() {
+  const [view, setView] = useState<View>('overview')
+  const [bundle, setBundle] = useState<Bundle | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+  const [notice, setNotice] = useState('')
+  const [selectedId, setSelectedId] = useState('')
+  const [search, setSearch] = useState('')
+  const [equityDimension, setEquityDimension] = useState('facility_type')
+  const [equity, setEquity] = useState<any>(null)
+
+  async function load(showLoader = false) {
+    if (showLoader) setLoading(true)
+    setError('')
+    try {
+      const [dashboard, patients, gaps, reports, imports, measures] = await Promise.all([api.dashboard(), api.patients(), api.gaps(), api.reports(), api.imports(), api.measures()])
+      setBundle({ dashboard, patients, gaps, reports, imports, measures })
+      setSelectedId((current) => current && gaps.some((row) => row.id === current) ? current : gaps[0]?.id ?? '')
+    } catch (caught) { setError(caught instanceof Error ? caught.message : 'Unable to load workspace') }
+    finally { setLoading(false) }
+  }
+
+  useEffect(() => { void load(true) }, [])
+  useEffect(() => {
+    if (view !== 'equity') return
+    api.equity(equityDimension).then(setEquity).catch((caught) => setError(caught.message))
+  }, [view, equityDimension, bundle?.dashboard.current.rate])
+
+  async function perform(action: () => Promise<unknown>, success: string) {
+    setError('')
+    setNotice('')
+    try { await action(); setNotice(success); await load() }
+    catch (caught) { setError(caught instanceof Error ? caught.message : 'Action could not be completed') }
+  }
+
+  const selected = bundle?.patients.find((row) => row.id === selectedId)
+  const screenTitle = nav.find((item) => item.id === view)?.label ?? 'Overview'
+
+  return <div className="app-shell">
+    <aside className="sidebar">
+      <div className="brand"><span className="brand-mark"><Activity size={19} strokeWidth={2.5} /></span><span>measurebridge<span className="brand-sub">ACO QUALITY OPS</span></span></div>
+      <div className="workspace-label">WORKSPACE</div>
+      <nav aria-label="Workspace navigation">{nav.map(({ id, label, icon: Icon }) => <button key={id} title={label} aria-label={label} className={`nav-item ${view === id ? 'active' : ''}`} onClick={() => setView(id)}><Icon size={17} /><span>{label}</span>{id === 'queue' && bundle?.gaps.length ? <span className="nav-count">{bundle.gaps.length}</span> : null}</button>)}</nav>
+      <div className="sidebar-bottom"><div className="program-badge"><span className="live-dot" />SYNTHETIC ENVIRONMENT</div><p>Educational demonstration only.<br />No real patient information.</p><button className="sidebar-user" title="Signed-in workspace role"><span className="avatar">SR</span><span><strong>Sam Rivera</strong><small>ACO Operations</small></span><ChevronDown size={15} /></button></div>
+    </aside>
+
+    <main className="main-area">
+      <header className="topbar"><div className="breadcrumbs">Quality operations <span>/</span> <strong>{screenTitle}</strong></div><div className="top-actions"><span className="period-chip">Measurement year <b>2026</b></span><button className="icon-button" title="Refresh workspace" onClick={() => void load(true)}><RefreshCw size={16} /></button></div></header>
+      <div className="content-wrap">
+        <div className="page-heading"><div><div className="eyebrow">EDUCATIONAL MSSP CONTEXT <span>·</span> RULE v1.0.0</div><h1>{view === 'overview' ? 'Quality operations' : screenTitle}</h1><p>{view === 'overview' ? 'Documentation completeness across a fixed synthetic cohort.' : pageSubtitle(view)}</p></div>{view === 'queue' && <div className="heading-stat"><strong>{bundle?.gaps.length ?? '—'}</strong><span>records needing review</span></div>}</div>
+
+        {(error || notice) && <div className={`toast ${error ? 'toast-error' : 'toast-success'}`} role="status">{error ? <CircleAlert size={17} /> : <Check size={17} />}<span>{error || notice}</span><button title="Dismiss" onClick={() => { setError(''); setNotice('') }}><X size={16} /></button></div>}
+        {loading && !bundle ? <div className="loading-state"><LoaderCircle className="spin" size={22} /> Connecting to synthetic workspace…</div> : bundle ? <>
+          {view === 'overview' && <Overview bundle={bundle} onNavigate={setView} />}
+          {view === 'queue' && <QueueView bundle={bundle} search={search} setSearch={setSearch} selectedId={selectedId} onSelect={(id) => { setSelectedId(id); setView('point-of-care') }} onAssign={(id, body) => perform(() => api.assign(id, body), 'Follow-up assignment saved.')} />}
+          {view === 'point-of-care' && <PointOfCare patient={selected} patients={bundle.gaps} selectedId={selectedId} setSelectedId={setSelectedId} onSave={(body) => selected && perform(() => api.workflow(selected.id, body), 'Workflow event saved. Original source record remains unchanged.')} />}
+          {view === 'reports' && <ReportsView bundle={bundle} onFreeze={(body) => perform(() => api.freeze(body), 'Versioned snapshot frozen.')} onSignoff={(id, body) => perform(() => api.signoff(id, body), 'Independent review sign-off recorded.')} />}
+          {view === 'equity' && <EquityView equity={equity} dimension={equityDimension} setDimension={setEquityDimension} />}
+          {view === 'imports' && <ImportsView imports={bundle.imports} onUpload={(file) => perform(() => api.upload(file), 'Import processed. Review rejected rows below.')} onDisposition={(id, body) => perform(() => api.disposition(id, body), 'Import errors reviewed and dispositioned.')} />}
+          {view === 'registry' && <RegistryView measures={bundle.measures} specification={bundle.dashboard.specification} />}
+        </> : <div className="empty-state"><CircleAlert size={22} /><strong>Workspace unavailable</strong><p>Confirm the API is running at {import.meta.env.VITE_API_BASE ?? 'http://localhost:8000/api'}.</p><button className="button button-dark" onClick={() => void load(true)}><RefreshCw size={15} /> Retry connection</button></div>}
+        <footer className="app-footer"><ShieldCheck size={15} /><span>Constructed demonstration, not measured clinical improvement. No treatment recommendations or CMS-ready submissions.</span></footer>
+      </div>
+    </main>
+  </div>
+}
+
+function pageSubtitle(view: View) {
+  return ({ queue: 'Prioritize operational follow-up without turning documentation gaps into treatment advice.', 'point-of-care': 'Capture limited documentation evidence while preserving patient preference and source history.', reports: 'Freeze, reconcile, independently review, and export internal reporting packages.', equity: 'Compare facility setting and access barriers with small-cell suppression applied.', imports: 'Load fictional clinical rows and disposition rejected records explicitly.', registry: 'Versioned educational specifications keep executable rules separate from CMS guidance.' } as Record<View, string>)[view] ?? ''
+}
+
+function Overview({ bundle, onNavigate }: { bundle: Bundle; onNavigate: (view: View) => void }) {
+  const { current, baseline, changes, open_import_errors: importErrors } = bundle.dashboard
+  const trend = [{ label: 'Baseline', rate: baseline.rate ?? 0 }, { label: 'Current', rate: current.rate ?? 0 }]
+  const categories = [{ label: 'Documentation completed', value: changes.documentation_completion ?? 0, color: 'var(--green)' }, { label: 'Data repaired', value: changes.data_repair ?? 0, color: 'var(--blue)' }, { label: 'Simulated care event', value: changes.simulated_care_event ?? 0, color: 'var(--coral)' }]
+  return <>
+    <section className="metric-grid">
+      <Metric label="Documentation completeness" value={percent(current.rate)} detail={`${current.numerator} of ${current.denominator} eligible`} icon={Gauge} accent="green" />
+      <Metric label="Fixed denominator" value={current.denominator} detail={`${current.total} source records · ${current.excluded} excluded`} icon={UsersRound} accent="blue" />
+      <Metric label="Unresolved" value={current.unresolved} detail={`${current.eligibility_questions} eligibility questions`} icon={CircleAlert} accent="amber" />
+      <Metric label="Open import errors" value={importErrors} detail={importErrors ? 'Review before reporting sign-off' : 'No open ingestion errors'} icon={CloudUpload} accent={importErrors ? 'coral' : 'green'} />
+    </section>
+    <section className="overview-grid">
+      <article className="panel trend-panel"><div className="panel-heading"><div><div className="section-kicker">RULE PERFORMANCE</div><h2>Baseline to current</h2></div><span className="direction-tag"><ArrowUpRight size={14} /> Higher is better</span></div><div className="chart-wrap"><ResponsiveContainer width="100%" height="100%"><AreaChart data={trend} margin={{ top: 12, right: 14, left: -18, bottom: 0 }}><defs><linearGradient id="rateFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stopColor="#36765d" stopOpacity={0.22} /><stop offset="95%" stopColor="#36765d" stopOpacity={0.015} /></linearGradient></defs><CartesianGrid vertical={false} stroke="#e7e9e3" /><XAxis dataKey="label" axisLine={false} tickLine={false} tick={{ fill: '#727a71', fontSize: 12 }} dy={8} /><YAxis domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} axisLine={false} tickLine={false} tickFormatter={(value) => `${value}%`} tick={{ fill: '#899087', fontSize: 11 }} /><Tooltip formatter={(value) => [`${value}%`, 'Completeness']} contentStyle={{ border: '1px solid #e2e6df', borderRadius: 5, boxShadow: '0 8px 20px #14241a12' }} /><Area type="monotone" dataKey="rate" stroke="#36765d" strokeWidth={3} fill="url(#rateFill)" activeDot={{ r: 5, fill: '#36765d', stroke: '#fff', strokeWidth: 2 }} /></AreaChart></ResponsiveContainer></div><div className="chart-foot"><div><strong>{percent(baseline.rate)}</strong><span>Starting point</span></div><span className="change-arrow">→</span><div><strong>{percent(current.rate)}</strong><span>Current state</span></div><span className={`pp-change ${(current.rate ?? 0) >= (baseline.rate ?? 0) ? 'positive' : 'negative'}`}>{(current.rate ?? 0) - (baseline.rate ?? 0) > 0 ? '+' : ''}{((current.rate ?? 0) - (baseline.rate ?? 0)).toFixed(0)} pp</span></div></article>
+      <article className="panel changes-panel"><div className="panel-heading"><div><div className="section-kicker">CHANGE PROVENANCE</div><h2>What changed</h2></div><span className="micro-label">SINCE BASELINE</span></div><div className="change-total"><strong>{categories.reduce((sum, item) => sum + item.value, 0)}</strong><span>records now met</span></div><div className="change-list">{categories.map((item) => <div className="change-row" key={item.label}><span className="change-dot" style={{ background: item.color }} /><span>{item.label}</span><strong>{item.value}</strong></div>)}</div><div className="quiet-note">Rates alone are not clinical outcomes. Original imported records remain preserved.</div></article>
+    </section>
+    <section className="scenario-strip"><div className="scenario-stamp"><Activity size={17} /><span>CONSTRUCTED<br />SCENARIO</span></div><div className="scenario-math"><strong>60%</strong><span>→</span><strong>75%</strong><small>+15 percentage points</small></div><p>Illustration only: if the 15 initially not-documented records are resolved through documentation completion, the fixed denominator stays 100. This is not current performance or measured clinical improvement.</p></section>
+    <section className="lower-grid"><article className="panel gap-panel"><div className="panel-heading"><div><div className="section-kicker">OPERATIONAL FOLLOW-UP</div><h2>Work to review</h2></div><button className="text-button" onClick={() => onNavigate('queue')}>Open queue <ArrowUpRight size={14} /></button></div><div className="gap-stat-row"><div><strong>{bundle.gaps.length}</strong><span>records in queue</span></div><div><strong>{bundle.gaps.filter((row) => row.result.category === 'data_pipeline_defect').length}</strong><span>data defects</span></div><div><strong>{bundle.gaps.filter((row) => row.result.category === 'patient_preference').length}</strong><span>preferences preserved</span></div></div><div className="compact-records">{bundle.gaps.slice(0, 4).map((row) => <button className="compact-record" key={row.id} onClick={() => onNavigate('queue')}><span className="record-initial">{row.id.slice(-2)}</span><span><strong>{row.record.name}</strong><small>{barrierLabel[row.result.category] ?? human(row.result.category)}</small></span><span className={`status-pill ${statusClass(row.result.status)}`}>{human(row.result.status)}</span></button>)}</div></article><article className="panel readiness-panel"><div className="panel-heading"><div><div className="section-kicker">REPORTING READINESS</div><h2>Review status</h2></div><ClipboardCheck size={19} className="muted-icon" /></div><div className="readiness-line"><span className={importErrors || current.unresolved ? 'readiness-mark warning' : 'readiness-mark'}>{importErrors || current.unresolved ? <CircleAlert size={16} /> : <Check size={16} />}</span><div><strong>{importErrors || current.unresolved ? 'Review blockers remain' : 'Ready for internal review'}</strong><small>{importErrors} import errors · {current.unresolved} unresolved results</small></div></div><div className="readiness-foot"><span>Latest package</span><strong>{bundle.reports[0] ? `Snapshot ${bundle.reports[0].id}` : 'Not frozen yet'}</strong></div><button className="button button-outline full-button" onClick={() => onNavigate('reports')}><FileText size={15} /> Go to reporting review</button></article></section>
+    <div className="education-callout"><HeartPulse size={18} /><p><strong>Educational rule only.</strong> This is not the CMS Controlling High Blood Pressure measure. No treatment threshold is evaluated and no medication action is suggested.</p></div>
+  </>
+}
+
+function Metric({ label, value, detail, icon: Icon, accent }: { label: string; value: string | number; detail: string; icon: typeof Gauge; accent: string }) {
+  return <article className="metric-card"><div className={`metric-icon ${accent}`}><Icon size={17} /></div><div className="metric-label">{label}</div><strong className="metric-value">{value}</strong><div className="metric-detail">{detail}</div></article>
+}
+
+function QueueView({ bundle, search, setSearch, selectedId, onSelect, onAssign }: { bundle: Bundle; search: string; setSearch: (value: string) => void; selectedId: string; onSelect: (id: string) => void; onAssign: (id: string, body: unknown) => Promise<void> }) {
+  const [assigning, setAssigning] = useState<Patient | null>(null)
+  const gaps = bundle.gaps.filter((row) => `${row.id} ${row.record.name} ${row.result.category} ${row.assignment?.owner ?? ''}`.toLowerCase().includes(search.toLowerCase()))
+  return <><section className="panel table-panel"><div className="table-toolbar"><label className="search-field"><Search size={16} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search name, ID, category, owner" /></label><div className="toolbar-summary"><span className="live-dot" />{gaps.length} open records</div></div><div className="table-scroll"><table><thead><tr><th>Fictional patient</th><th>Classification</th><th>Rule result</th><th>Assigned to</th><th>Due</th><th>Actions</th></tr></thead><tbody>{gaps.map((row) => <tr key={row.id} className={selectedId === row.id ? 'selected-row' : ''} onClick={() => onSelect(row.id)}><td><div className="patient-cell"><span className="record-initial">{row.id.slice(-2)}</span><span><strong>{row.record.name}</strong><small>{row.id}</small></span></div></td><td><span className={`category-label ${statusClass(row.result.category)}`}>{barrierLabel[row.result.category] ?? human(row.result.category)}</span></td><td><span className={`status-pill ${statusClass(row.result.status)}`}>{human(row.result.status)}</span></td><td>{row.assignment ? <span className="assigned-cell">{row.assignment.owner}<small>{row.assignment.role}</small></span> : <span className="muted-text">Unassigned</span>}</td><td>{row.assignment?.due_date ?? '—'}</td><td><button className="row-action" title="Assign follow-up" aria-label={`Assign follow-up for ${row.id}`} onClick={(event) => { event.stopPropagation(); setAssigning(row) }}><UserRoundPlus size={16} /></button></td></tr>)}</tbody></table></div>{gaps.length === 0 && <div className="no-results">No records match this search.</div>}<div className="table-note"><ShieldCheck size={14} /> Patient declines and eligibility questions stay visible but cannot be automatically resolved.</div></section>{assigning && <AssignmentDialog patient={assigning} onClose={() => setAssigning(null)} onSave={async (body) => { await onAssign(assigning.id, body); setAssigning(null) }} />}</>
+}
+
+function AssignmentDialog({ patient, onClose, onSave }: { patient: Patient; onClose: () => void; onSave: (body: unknown) => Promise<void> }) {
+  const suggestedRole = roleByProvenance[provenanceByCategory[patient.result.category] ?? ''] ?? 'ACO Operations'
+  const [role, setRole] = useState(patient.assignment?.role ?? suggestedRole)
+  const [owner, setOwner] = useState(patient.assignment?.owner ?? names[suggestedRole])
+  const [dueDate, setDueDate] = useState(patient.assignment?.due_date ?? new Date(Date.now() + 14 * 86400000).toISOString().slice(0, 10))
+  const [barrier, setBarrier] = useState(patient.assignment?.barrier ?? patient.result.category)
+  const [saving, setSaving] = useState(false)
+  async function submit(event: React.FormEvent) {
+    event.preventDefault()
+    setSaving(true)
+    await onSave({ actor: 'Sam Rivera', role: 'ACO Operations', owner, assigned_role: role, due_date: dueDate, barrier })
+    setSaving(false)
+  }
+  return <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose() }}><section className="assignment-dialog" role="dialog" aria-modal="true" aria-labelledby="assign-title"><div className="panel-heading"><div><div className="section-kicker">ACO OPERATIONS</div><h2 id="assign-title">Assign follow-up</h2></div><button className="icon-button" aria-label="Close dialog" onClick={onClose}><X size={17} /></button></div><p className="dialog-patient">{patient.record.name} <span>{patient.id}</span></p><form onSubmit={submit}><label className="form-field"><span>Accountable role</span><select value={role} onChange={(event) => { setRole(event.target.value); setOwner(names[event.target.value]) }}>{roleOptions.map((option) => <option key={option}>{option}</option>)}</select></label><label className="form-field"><span>Owner</span><input value={owner} onChange={(event) => setOwner(event.target.value)} minLength={2} required /></label><div className="dialog-two-col"><label className="form-field"><span>Due date</span><input type="date" value={dueDate} onChange={(event) => setDueDate(event.target.value)} required /></label><label className="form-field"><span>Barrier category</span><select value={barrier} onChange={(event) => setBarrier(event.target.value)}>{['missing_documentation', 'true_care_gap', 'patient_preference', 'data_pipeline_defect', 'eligibility_question', 'transport', 'language', 'none'].map((option) => <option key={option} value={option}>{barrierLabel[option] ?? human(option)}</option>)}</select></label></div><div className="dialog-actions"><button type="button" className="button button-outline" onClick={onClose}>Cancel</button><button className="button button-primary" disabled={saving}>{saving ? <LoaderCircle className="spin" size={15} /> : <Check size={15} />} Save assignment</button></div></form></section></div>
+}
+
+function PointOfCare({ patient, patients, selectedId, setSelectedId, onSave }: { patient?: Patient; patients: Patient[]; selectedId: string; setSelectedId: (id: string) => void; onSave: (body: unknown) => void }) {
+  const category = patient?.result.category ?? ''
+  const editable = Boolean(patient && provenanceByCategory[category])
+  const provenance = provenanceByCategory[category]
+  const role = roleByProvenance[provenance]
+  const eventId = patient?.events[patient.events.length - 1]?.id ?? 0
+  const [status, setStatus] = useState('completed')
+  const [observationDate, setObservationDate] = useState(String(patient?.record.observation_date ?? patient?.record.encounter_date ?? ''))
+  const [systolic, setSystolic] = useState(String(patient?.record.systolic ?? ''))
+  const [diastolic, setDiastolic] = useState(String(patient?.record.diastolic ?? ''))
+  const [evidence, setEvidence] = useState('Simulated chart review; documentation source verified.')
+  const [actor, setActor] = useState(names[role] ?? names.Provider)
+  const [saving, setSaving] = useState(false)
+  useEffect(() => { setStatus('completed'); setObservationDate(String(patient?.record.observation_date ?? patient?.record.encounter_date ?? '')); setSystolic(String(patient?.record.systolic ?? '')); setDiastolic(String(patient?.record.diastolic ?? '')); setActor(names[role] ?? names.Provider); setEvidence('Simulated chart review; documentation source verified.') }, [selectedId, role, patient?.id])
+  const hasObservation = status === 'completed'
+  function submit(event: React.FormEvent) {
+    event.preventDefault()
+    if (!patient || !editable) return
+    setSaving(true)
+    onSave({ actor, role, provenance, evidence, documentation_status: status, observation_date: hasObservation ? observationDate : null, systolic: hasObservation ? Number(systolic) : null, diastolic: hasObservation ? Number(diastolic) : null, units: 'mmHg', expected_event_id: eventId })
+    setTimeout(() => setSaving(false), 800)
+  }
+  return <div className="poc-layout"><aside className="panel patient-picker"><div className="section-kicker">OPEN WORK ITEMS</div><h2>Patient context</h2><label className="field-label" htmlFor="patient-select">Select fictional record</label><select id="patient-select" value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>{patients.map((row) => <option key={row.id} value={row.id}>{row.id} · {row.record.name}</option>)}</select>{patient ? <><div className="patient-summary"><span className="patient-monogram">{String(patient.record.name).split(' ').map((part) => part[0]).slice(-2).join('')}</span><div><strong>{patient.record.name}</strong><small>{patient.id} · Source row {patient.result.source_row}</small></div></div><div className="context-list"><div><span>Facility</span><strong>{patient.record.facility_type}</strong></div><div><span>Access barrier</span><strong>{human(String(patient.record.access_barrier))}</strong></div><div><span>Encounter</span><strong>{patient.record.encounter_date}</strong></div><div><span>Current status</span><strong className={`status-text ${statusClass(patient.result.status)}`}>{human(patient.result.status)}</strong></div></div><div className="rule-explanation"><span className="section-kicker">WHY THIS RECORD</span><p>{patient.result.reason}</p><small>{patient.result.rule_version} · {patient.result.source_fixture}:{patient.result.source_row}</small></div></> : <p className="muted-text">No open record is available.</p>}</aside>
+    <section className="panel form-panel"><div className="panel-heading"><div><div className="section-kicker">SIMULATED EHR CAPTURE</div><h2>Documentation workflow</h2></div><span className="draft-tag">DRAFT FORM</span></div>{patient && <><div className="poc-warning"><ShieldCheck size={16} /><span>Documentation capture only. No treatment recommendations or medication changes.</span></div>{!editable ? <div className="locked-state"><CircleAlert size={20} /><div><strong>{category === 'patient_preference' ? 'Patient preference preserved' : 'Manual resolution required'}</strong><p>{category === 'patient_preference' ? 'A decline cannot be changed through this form. Record preference outside this simulated workflow.' : 'Eligibility questions require ACO Operations review. Do not infer eligibility.'}</p></div></div> : <form onSubmit={submit}><div className="capture-grid"><label className="form-field wide"><span>Documentation status</span><select value={status} onChange={(event) => setStatus(event.target.value)}><option value="completed">Completed</option><option value="not_documented">Not documented</option><option value="not_completed">Not completed</option><option value="patient_declined">Patient declined</option></select></label>{hasObservation && <><label className="form-field"><span>Assessment date</span><input type="date" value={observationDate} onChange={(event) => setObservationDate(event.target.value)} required /></label><div className="bp-field-row"><label className="form-field"><span>Systolic</span><input type="number" min="50" max="300" step="1" value={systolic} onChange={(event) => setSystolic(event.target.value)} required /></label><span className="bp-divider">/</span><label className="form-field"><span>Diastolic</span><input type="number" min="30" max="200" step="1" value={diastolic} onChange={(event) => setDiastolic(event.target.value)} required /></label><span className="unit-label">mmHg</span></div></>}</div><div className="form-divider" /><div className="capture-grid"><label className="form-field"><span>Acting as</span><select value={role} disabled><option>{role}</option></select></label><label className="form-field"><span>Actor name</span><input value={actor} onChange={(event) => setActor(event.target.value)} required minLength={2} /></label><label className="form-field wide"><span>Evidence note</span><textarea value={evidence} onChange={(event) => setEvidence(event.target.value)} minLength={10} maxLength={2000} rows={3} required /></label></div><div className="form-footnote"><span>Change type</span><strong>{human(provenance)}</strong><span className="form-spacer" /><button className="button button-primary" disabled={saving}>{saving ? <LoaderCircle className="spin" size={15} /> : <Check size={15} />} Save workflow event</button></div></form>}</>}</section></div>
+}
+
+function ReportsView({ bundle, onFreeze, onSignoff }: { bundle: Bundle; onFreeze: (body: unknown) => void; onSignoff: (id: number, body: unknown) => void }) {
+  const [preparedBy, setPreparedBy] = useState('Sam Rivera')
+  const [reviewer, setReviewer] = useState('Casey Lee')
+  const [evidence, setEvidence] = useState('Counts reconciled against the frozen source rows and rule version.')
+  const latest = bundle.reports[0]
+  const blockers = (latest?.blockers ?? []).length
+  return <><section className="report-summary"><div className="report-status-card"><span className="status-ring"><FileCheck2 size={20} /></span><div><span className="section-kicker">CURRENT DATA STATE</span><strong>{bundle.dashboard.open_import_errors || bundle.dashboard.current.unresolved ? 'Needs resolution' : 'Ready to freeze'}</strong><small>{bundle.dashboard.current.denominator} eligible · {bundle.dashboard.current.unresolved} unresolved · {bundle.dashboard.open_import_errors} import errors</small></div></div><div className="report-status-card"><span className="status-ring amber-ring"><ClipboardCheck size={20} /></span><div><span className="section-kicker">LATEST SNAPSHOT</span><strong>{latest ? `Snapshot ${latest.id}` : 'No snapshot yet'}</strong><small>{latest ? `${latest.signoff ? 'Signed off' : 'Draft'} · ${latest.created_at}` : 'Freeze a versioned package to begin review'}</small></div></div></section>
+    <section className="reports-grid"><article className="panel freeze-panel"><div className="section-kicker">1 / PREPARE PACKAGE</div><h2>Freeze current reporting state</h2><p>Creates an immutable snapshot with rows, rule specification, event provenance, reconciliation, equity aggregates, and integrity digest.</p><label className="form-field"><span>Prepared by</span><input value={preparedBy} onChange={(event) => setPreparedBy(event.target.value)} minLength={2} /></label><button className="button button-primary" onClick={() => onFreeze({ actor: preparedBy, role: 'ACO Operations' })}><FileCheck2 size={15} /> Freeze snapshot</button><div className="blocker-note"><CircleAlert size={15} /><span>Unresolved results or open ingestion errors block reviewer approval. New data requires a new snapshot.</span></div></article>
+    <article className="panel review-panel"><div className="section-kicker">2 / INDEPENDENT REVIEW</div><h2>Reviewer sign-off</h2><p>A different ACO Operations reviewer must verify counts, source evidence, and the frozen package digest.</p><label className="form-field"><span>Reviewer</span><input value={reviewer} onChange={(event) => setReviewer(event.target.value)} minLength={2} /></label><label className="form-field"><span>Review evidence</span><textarea value={evidence} onChange={(event) => setEvidence(event.target.value)} rows={2} minLength={10} /></label><button className="button button-dark" disabled={!latest || Boolean(latest.signoff) || blockers > 0} onClick={() => latest && onSignoff(latest.id, { actor: reviewer, role: 'ACO Operations', evidence })}><Check size={15} /> Sign off latest snapshot</button>{blockers > 0 && <small className="inline-warning">Resolve frozen blockers by correcting live data and freezing a new version.</small>}</article></section>
+    <section className="panel snapshot-panel">
+      <div className="panel-heading"><div><div className="section-kicker">IMMUTABLE HISTORY</div><h2>Reporting packages</h2></div><span className="micro-label">INTERNAL ONLY</span></div>
+      <div className="table-scroll"><table><thead><tr><th>Snapshot</th><th>Created</th><th>Prepared by</th><th>Rate</th><th>Reconciliation</th><th>Blockers</th><th>Review</th><th>Exports</th></tr></thead><tbody>{bundle.reports.map((item) => <tr key={item.id}>
+        <td><strong>#{item.id}</strong><small className="digest-value" title={item.digest}>SHA-256 {String(item.digest ?? '').slice(0, 12)}…</small></td>
+        <td>{new Date(item.created_at).toLocaleString()}</td><td>{item.prepared_by}</td>
+        <td><strong>{percent(item.counts?.rate)}</strong><small className="digest-value">{item.counts?.numerator}/{item.counts?.denominator} eligible</small></td>
+        <td><span className={`status-pill ${item.reconciliation?.passed ? 'met' : 'unresolved'}`}>{item.reconciliation?.passed ? 'Balanced' : 'Mismatch'}</span><small className="digest-value">{item.reconciliation?.unique_patient_ids ?? 0} unique · {item.reconciliation?.accepted_import_rows ?? 0} accepted</small></td>
+        <td>{item.blockers?.length ?? 0}</td><td><span className={`status-pill ${item.signoff ? 'met' : 'not-met'}`}>{item.signoff ? 'Signed off' : 'Draft'}</span></td>
+        <td><div className="export-actions"><a title="Download internal JSON" href={`${import.meta.env.VITE_API_BASE ?? 'http://localhost:8000/api'}/reports/${item.id}/export?format=json`}><ArrowDownToLine size={14} /> JSON</a><a title="Download internal CSV" href={`${import.meta.env.VITE_API_BASE ?? 'http://localhost:8000/api'}/reports/${item.id}/export?format=csv`}><ArrowDownToLine size={14} /> CSV</a></div></td>
+      </tr>)}</tbody></table></div>
+      {bundle.reports.length === 0 && <div className="empty-inline">No reporting snapshots have been frozen.</div>}
+      <div className="table-note"><ShieldCheck size={14} /> Exports are labeled internal educational packages and are not CMS submissions.</div>
+    </section></>
+}
+
+function EquityView({ equity, dimension, setDimension }: { equity: any; dimension: string; setDimension: (value: string) => void }) {
+  return <><section className="equity-toolbar"><div><div className="section-kicker">STRATIFICATION</div><h2>Compare access and setting</h2></div><div className="segmented-control"><button className={dimension === 'facility_type' ? 'selected' : ''} onClick={() => setDimension('facility_type')}>Facility setting</button><button className={dimension === 'access_barrier' ? 'selected' : ''} onClick={() => setDimension('access_barrier')}>Access barrier</button></div></section><section className="panel equity-panel">{equity?.complementary_suppression && <div className="suppression-banner"><ShieldCheck size={16} /><span>Small-cell rule applied: groups below {equity.minimum_cell} records suppress clinical counts and rates. Aggregate values are also suppressed to prevent reconstruction.</span></div>}<div className="table-scroll"><table><thead><tr><th>{dimension === 'facility_type' ? 'Facility setting' : 'Access barrier'}</th><th>Population</th><th>Eligible denominator</th><th>Documented</th><th>Missing documentation</th><th>Unresolved</th><th>Completeness</th></tr></thead><tbody>{(equity?.groups ?? []).map((group: any) => <tr key={group.label}><td><strong>{human(group.label)}</strong></td><td>{group.suppressed ? <span className="suppressed">Suppressed</span> : group.population}</td><td>{group.suppressed ? '—' : group.denominator}</td><td>{group.suppressed ? '—' : group.numerator}</td><td>{group.suppressed ? '—' : group.missingness}</td><td>{group.suppressed ? '—' : group.unresolved}</td><td>{group.suppressed ? '—' : percent(group.rate)}</td></tr>)}</tbody></table></div>{!equity && <div className="loading-state"><LoaderCircle className="spin" size={18} /> Calculating strata…</div>}<div className="equity-footnote">Synthetic data only. Suppression is a display safeguard, not a formal privacy guarantee. Operational patient-level screens are separate.</div></section></>
+}
+
+function ImportsView({ imports, onUpload, onDisposition }: { imports: any[]; onUpload: (file: File) => void; onDisposition: (id: number, body: unknown) => void }) {
+  const [file, setFile] = useState<File | null>(null)
+  const [actor, setActor] = useState('Sam Rivera')
+  const [evidence, setEvidence] = useState('Rejected synthetic rows reviewed; duplicates and invalid fields remain excluded from the denominator.')
+  return <><section className="imports-grid"><article className="panel upload-panel"><div className="section-kicker">SYNTHETIC CSV INGESTION</div><h2>Import source records</h2><p>Accepted rows are appended to the cohort. Malformed and duplicate rows are retained as import errors, not silently added to the denominator.</p><label className="drop-zone"><CloudUpload size={24} /><strong>{file?.name ?? 'Choose a CSV fixture'}</strong><span>UTF-8 · Maximum 2 MB</span><input type="file" accept=".csv,text/csv" onChange={(event) => setFile(event.target.files?.[0] ?? null)} /></label><button className="button button-primary" disabled={!file} onClick={() => file && onUpload(file)}><CloudUpload size={15} /> Import file</button></article><article className="panel import-guidance"><div className="section-kicker">VALIDATION BEHAVIOR</div><h2>Ingestion controls</h2><div className="guidance-list"><div><Check size={15} /><span>Required fields and date/number formats validated per row</span></div><div><Check size={15} /><span>Duplicate patient identifiers rejected</span></div><div><Check size={15} /><span>Accepted rows preserve source fixture and row number</span></div><div><Check size={15} /><span>ACO Operations disposition required for error review</span></div></div><div className="csv-link"><FileText size={15} /><span>Supplied fixture: <strong>fixtures/synthetic_population.csv</strong></span></div></article></section>
+    <section className="panel import-history"><div className="panel-heading"><div><div className="section-kicker">IMPORT BATCHES</div><h2>Ingestion history</h2></div><span className="micro-label">{imports.length} BATCHES</span></div><div className="batch-list">{imports.map((batch) => <article className="batch-item" key={batch.id}><div className="batch-icon"><CloudUpload size={17} /></div><div className="batch-main"><strong>{batch.filename}</strong><small>Batch #{batch.id} · {new Date(batch.created_at).toLocaleString()}</small></div><div className="batch-count"><strong>{batch.accepted}</strong><small>accepted</small></div><div className={`batch-count ${batch.errors.length ? 'has-errors' : ''}`}><strong>{batch.errors.length}</strong><small>errors</small></div><span className={`status-pill ${batch.errors.length && !batch.disposition ? 'not-met' : 'met'}`}>{batch.disposition ? 'Reviewed' : batch.errors.length ? 'Review needed' : 'Clean'}</span>{batch.errors.length > 0 && !batch.disposition && <button className="button button-outline compact-button" onClick={() => onDisposition(batch.id, { actor, role: 'ACO Operations', evidence })}>Disposition errors</button>}<details className="error-details"><summary>Details</summary><pre>{JSON.stringify(batch.errors, null, 2)}</pre></details></article>)}</div>{imports.length === 0 && <div className="empty-inline">No imports yet.</div>}<div className="table-note"><ShieldCheck size={14} /> Error dispositions document review only; rejected rows are not added to the eligible denominator.</div></section><details className="review-identity"><summary>Import review identity and evidence</summary><div className="identity-fields"><label className="form-field"><span>Reviewer name</span><input value={actor} onChange={(event) => setActor(event.target.value)} /></label><label className="form-field"><span>Evidence note</span><input value={evidence} onChange={(event) => setEvidence(event.target.value)} /></label></div></details></>
+}
+
+function RegistryView({ measures, specification }: { measures: any[]; specification: Record<string, any> }) {
+  const spec = measures[0] ?? specification
+  return <><section className="registry-banner"><div className="registry-icon"><FileText size={20} /></div><div><div className="section-kicker">ACTIVE EDUCATIONAL RULE</div><h2>{spec.name ?? 'Documentation completeness'}</h2><p>Fictional rule inspired by blood-pressure documentation workflows. Not a validated clinical measure or CMS submission specification.</p></div><span className="status-pill met">{spec.review_status ?? 'Internally reviewed'}</span></section><section className="registry-grid"><article className="panel spec-card"><div className="section-kicker">SPECIFICATION METADATA</div><div className="spec-rows">{[['Rule ID', spec.id], ['Program', spec.program], ['Payer', spec.payer], ['Measurement year', spec.measurement_year], ['Collection type', spec.collection_type], ['Version', spec.version], ['Performance direction', spec.performance_direction], ['Review status', spec.review_status]].map(([label, value]) => <div key={String(label)}><span>{label}</span><strong>{String(value ?? '—')}</strong></div>)}</div>{spec.source_url && <a className="source-link" target="_blank" rel="noreferrer" href={spec.source_url}>Reference context <ArrowUpRight size={14} /></a>}</article><article className="panel spec-card"><div className="section-kicker">EXECUTABLE LOGIC SUMMARY</div><div className="logic-block"><span>Population</span><p>{spec.population_rules ? `Age ${spec.population_rules.minimum_age}–${spec.population_rules.maximum_age}; encounter ${spec.population_rules.period_start} through ${spec.population_rules.period_end}; hypertension flag required.` : 'See versioned educational specification.'}</p></div><div className="logic-block"><span>Exclusion</span><p>Explicit hospice=true. Unknown eligibility fields remain unresolved, never assumed excluded.</p></div><div className="logic-block"><span>Numerator</span><p>Completed assessment with valid date and systolic/diastolic values in mmHg. Ranges validate fictional input; no clinical control threshold is used.</p></div><div className="logic-block"><span>Missing data</span><p>Missing documentation, incomplete assessment, patient-declined, data defect, and eligibility question are separate classifications.</p></div><a className="source-link" href="/docs/measure_specification.md">Read full measure specification <ArrowUpRight size={14} /></a></article></section><div className="education-callout"><HeartPulse size={18} /><p><strong>Program separation is intentional.</strong> LEAD remains a separate disabled program configuration. No real MSSP logic, LEAD logic, commercial payer terms, or reimbursement calculation is implemented.</p></div></>
+}

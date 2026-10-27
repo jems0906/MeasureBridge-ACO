@@ -1,0 +1,13 @@
+.env
+*.db
+*.sqlite
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
+*.py[cod]
+frontend/node_modules/
+frontend/dist/
+frontend/tsconfig.tsbuildinfo
+.coverage
+htmlcov/

@@ -1,0 +1,101 @@
+patient_id,name,date_of_birth,encounter_date,facility_type,access_barrier,hypertension,hospice,documentation_status,observation_date,systolic,diastolic,units
+SYN-001,Fictional Patient 001,1946-06-15,2026-10-01,Community,language,true,false,completed,2026-10-01,119,71,mmHg
+SYN-002,Fictional Patient 002,1947-06-15,2026-10-01,Community,language,true,false,completed,2026-10-01,120,72,mmHg
+SYN-003,Fictional Patient 003,1948-06-15,2026-10-01,Community,language,true,false,completed,2026-10-01,121,73,mmHg
+SYN-004,Fictional Patient 004,1949-06-15,2026-10-01,Assisted living,language,true,false,completed,2026-10-01,122,74,mmHg
+SYN-005,Fictional Patient 005,1950-06-15,2026-10-01,Assisted living,language,true,false,completed,2026-10-01,123,75,mmHg
+SYN-006,Fictional Patient 006,1951-06-15,2026-10-01,Assisted living,language,true,false,completed,2026-10-01,124,76,mmHg
+SYN-007,Fictional Patient 007,1952-06-15,2026-10-01,Assisted living,language,true,false,completed,2026-10-01,125,77,mmHg
+SYN-008,Fictional Patient 008,1953-06-15,2026-10-01,Skilled nursing,none,true,false,completed,2026-10-01,126,78,mmHg
+SYN-009,Fictional Patient 009,1954-06-15,2026-10-01,Skilled nursing,transport,true,false,completed,2026-10-01,127,79,mmHg
+SYN-010,Fictional Patient 010,1955-06-15,2026-10-01,Community,none,true,false,completed,2026-10-01,128,80,mmHg
+SYN-011,Fictional Patient 011,1956-06-15,2026-10-01,Community,none,true,false,completed,2026-10-01,129,81,mmHg
+SYN-012,Fictional Patient 012,1957-06-15,2026-10-01,Community,transport,true,false,completed,2026-10-01,130,82,mmHg
+SYN-013,Fictional Patient 013,1958-06-15,2026-10-01,Community,none,true,false,completed,2026-10-01,131,83,mmHg
+SYN-014,Fictional Patient 014,1959-06-15,2026-10-01,Assisted living,none,true,false,completed,2026-10-01,132,84,mmHg
+SYN-015,Fictional Patient 015,1960-06-15,2026-10-01,Assisted living,transport,true,false,completed,2026-10-01,133,85,mmHg
+SYN-016,Fictional Patient 016,1961-06-15,2026-10-01,Assisted living,none,true,false,completed,2026-10-01,134,86,mmHg
+SYN-017,Fictional Patient 017,1962-06-15,2026-10-01,Assisted living,none,true,false,completed,2026-10-01,135,87,mmHg
+SYN-018,Fictional Patient 018,1963-06-15,2026-10-01,Skilled nursing,transport,true,false,completed,2026-10-01,136,88,mmHg
+SYN-019,Fictional Patient 019,1964-06-15,2026-10-01,Skilled nursing,none,true,false,completed,2026-10-01,137,89,mmHg
+SYN-020,Fictional Patient 020,1965-06-15,2026-10-01,Community,none,true,false,completed,2026-10-01,138,70,mmHg
+SYN-021,Fictional Patient 021,1966-06-15,2026-10-01,Community,transport,true,false,completed,2026-10-01,139,71,mmHg
+SYN-022,Fictional Patient 022,1967-06-15,2026-10-01,Community,none,true,false,completed,2026-10-01,140,72,mmHg
+SYN-023,Fictional Patient 023,1968-06-15,2026-10-01,Community,none,true,false,completed,2026-10-01,141,73,mmHg
+SYN-024,Fictional Patient 024,1969-06-15,2026-10-01,Assisted living,transport,true,false,completed,2026-10-01,142,74,mmHg
+SYN-025,Fictional Patient 025,1970-06-15,2026-10-01,Assisted living,none,true,false,completed,2026-10-01,143,75,mmHg
+SYN-026,Fictional Patient 026,1971-06-15,2026-10-01,Assisted living,none,true,false,completed,2026-10-01,144,76,mmHg
+SYN-027,Fictional Patient 027,1972-06-15,2026-10-01,Assisted living,transport,true,false,completed,2026-10-01,145,77,mmHg
+SYN-028,Fictional Patient 028,1973-06-15,2026-10-01,Skilled nursing,none,true,false,completed,2026-10-01,146,78,mmHg
+SYN-029,Fictional Patient 029,1974-06-15,2026-10-01,Skilled nursing,none,true,false,completed,2026-10-01,147,79,mmHg
+SYN-030,Fictional Patient 030,1975-06-15,2026-10-01,Community,transport,true,false,completed,2026-10-01,148,80,mmHg
+SYN-031,Fictional Patient 031,1976-06-15,2026-10-01,Community,none,true,false,completed,2026-10-01,149,81,mmHg
+SYN-032,Fictional Patient 032,1977-06-15,2026-10-01,Community,none,true,false,completed,2026-10-01,150,82,mmHg
+SYN-033,Fictional Patient 033,1978-06-15,2026-10-01,Community,transport,true,false,completed,2026-10-01,151,83,mmHg
+SYN-034,Fictional Patient 034,1979-06-15,2026-10-01,Assisted living,none,true,false,completed,2026-10-01,152,84,mmHg
+SYN-035,Fictional Patient 035,1980-06-15,2026-10-01,Assisted living,none,true,false,completed,2026-10-01,118,85,mmHg
+SYN-036,Fictional Patient 036,1981-06-15,2026-10-01,Assisted living,transport,true,false,completed,2026-10-01,119,86,mmHg
+SYN-037,Fictional Patient 037,1982-06-15,2026-10-01,Assisted living,none,true,false,completed,2026-10-01,120,87,mmHg
+SYN-038,Fictional Patient 038,1983-06-15,2026-10-01,Skilled nursing,none,true,false,completed,2026-10-01,121,88,mmHg
+SYN-039,Fictional Patient 039,1984-06-15,2026-10-01,Skilled nursing,transport,true,false,completed,2026-10-01,122,89,mmHg
+SYN-040,Fictional Patient 040,1985-06-15,2026-10-01,Community,none,true,false,completed,2026-10-01,123,70,mmHg
+SYN-041,Fictional Patient 041,1986-06-15,2026-10-01,Community,none,true,false,completed,2026-10-01,124,71,mmHg
+SYN-042,Fictional Patient 042,1987-06-15,2026-10-01,Community,transport,true,false,completed,2026-10-01,125,72,mmHg
+SYN-043,Fictional Patient 043,1988-06-15,2026-10-01,Community,none,true,false,completed,2026-10-01,126,73,mmHg
+SYN-044,Fictional Patient 044,1989-06-15,2026-10-01,Assisted living,none,true,false,completed,2026-10-01,127,74,mmHg
+SYN-045,Fictional Patient 045,1990-06-15,2026-10-01,Assisted living,transport,true,false,completed,2026-10-01,128,75,mmHg
+SYN-046,Fictional Patient 046,1991-06-15,2026-10-01,Assisted living,none,true,false,completed,2026-10-01,129,76,mmHg
+SYN-047,Fictional Patient 047,1992-06-15,2026-10-01,Assisted living,none,true,false,completed,2026-10-01,130,77,mmHg
+SYN-048,Fictional Patient 048,1993-06-15,2026-10-01,Skilled nursing,transport,true,false,completed,2026-10-01,131,78,mmHg
+SYN-049,Fictional Patient 049,1994-06-15,2026-10-01,Skilled nursing,none,true,false,completed,2026-10-01,132,79,mmHg
+SYN-050,Fictional Patient 050,1945-06-15,2026-10-01,Community,none,true,false,completed,2026-10-01,133,80,mmHg
+SYN-051,Fictional Patient 051,1946-06-15,2026-10-01,Community,transport,true,false,completed,2026-10-01,134,81,mmHg
+SYN-052,Fictional Patient 052,1947-06-15,2026-10-01,Community,none,true,false,completed,2026-10-01,135,82,mmHg
+SYN-053,Fictional Patient 053,1948-06-15,2026-10-01,Community,none,true,false,completed,2026-10-01,136,83,mmHg
+SYN-054,Fictional Patient 054,1949-06-15,2026-10-01,Assisted living,transport,true,false,completed,2026-10-01,137,84,mmHg
+SYN-055,Fictional Patient 055,1950-06-15,2026-10-01,Assisted living,none,true,false,completed,2026-10-01,138,85,mmHg
+SYN-056,Fictional Patient 056,1951-06-15,2026-10-01,Assisted living,none,true,false,completed,2026-10-01,139,86,mmHg
+SYN-057,Fictional Patient 057,1952-06-15,2026-10-01,Assisted living,transport,true,false,completed,2026-10-01,140,87,mmHg
+SYN-058,Fictional Patient 058,1953-06-15,2026-10-01,Skilled nursing,none,true,false,completed,2026-10-01,141,88,mmHg
+SYN-059,Fictional Patient 059,1954-06-15,2026-10-01,Skilled nursing,none,true,false,completed,2026-10-01,142,89,mmHg
+SYN-060,Fictional Patient 060,1955-06-15,2026-10-01,Community,transport,true,false,completed,2026-10-01,143,70,mmHg
+SYN-061,Fictional Patient 061,1956-06-15,2026-10-01,Community,none,true,false,not_documented,,,,mmHg
+SYN-062,Fictional Patient 062,1957-06-15,2026-10-01,Community,none,true,false,not_documented,,,,mmHg
+SYN-063,Fictional Patient 063,1958-06-15,2026-10-01,Community,transport,true,false,not_documented,,,,mmHg
+SYN-064,Fictional Patient 064,1959-06-15,2026-10-01,Assisted living,none,true,false,not_documented,,,,mmHg
+SYN-065,Fictional Patient 065,1960-06-15,2026-10-01,Assisted living,none,true,false,not_documented,,,,mmHg
+SYN-066,Fictional Patient 066,1961-06-15,2026-10-01,Assisted living,transport,true,false,not_documented,,,,mmHg
+SYN-067,Fictional Patient 067,1962-06-15,2026-10-01,Assisted living,none,true,false,not_documented,,,,mmHg
+SYN-068,Fictional Patient 068,1963-06-15,2026-10-01,Skilled nursing,none,true,false,not_documented,,,,mmHg
+SYN-069,Fictional Patient 069,1964-06-15,2026-10-01,Skilled nursing,transport,true,false,not_documented,,,,mmHg
+SYN-070,Fictional Patient 070,1965-06-15,2026-10-01,Community,none,true,false,not_documented,,,,mmHg
+SYN-071,Fictional Patient 071,1966-06-15,2026-10-01,Community,none,true,false,not_documented,,,,mmHg
+SYN-072,Fictional Patient 072,1967-06-15,2026-10-01,Community,transport,true,false,not_documented,,,,mmHg
+SYN-073,Fictional Patient 073,1968-06-15,2026-10-01,Community,none,true,false,not_documented,,,,mmHg
+SYN-074,Fictional Patient 074,1969-06-15,2026-10-01,Assisted living,none,true,false,not_documented,,,,mmHg
+SYN-075,Fictional Patient 075,1970-06-15,2026-10-01,Assisted living,transport,true,false,not_documented,,,,mmHg
+SYN-076,Fictional Patient 076,1971-06-15,2026-10-01,Assisted living,none,true,false,not_completed,,,,mmHg
+SYN-077,Fictional Patient 077,1972-06-15,2026-10-01,Assisted living,none,true,false,not_completed,,,,mmHg
+SYN-078,Fictional Patient 078,1973-06-15,2026-10-01,Skilled nursing,transport,true,false,not_completed,,,,mmHg
+SYN-079,Fictional Patient 079,1974-06-15,2026-10-01,Skilled nursing,none,true,false,not_completed,,,,mmHg
+SYN-080,Fictional Patient 080,1975-06-15,2026-10-01,Community,none,true,false,not_completed,,,,mmHg
+SYN-081,Fictional Patient 081,1976-06-15,2026-10-01,Community,transport,true,false,not_completed,,,,mmHg
+SYN-082,Fictional Patient 082,1977-06-15,2026-10-01,Community,none,true,false,not_completed,,,,mmHg
+SYN-083,Fictional Patient 083,1978-06-15,2026-10-01,Community,none,true,false,not_completed,,,,mmHg
+SYN-084,Fictional Patient 084,1979-06-15,2026-10-01,Assisted living,transport,true,false,not_completed,,,,mmHg
+SYN-085,Fictional Patient 085,1980-06-15,2026-10-01,Assisted living,none,true,false,not_completed,,,,mmHg
+SYN-086,Fictional Patient 086,1981-06-15,2026-10-01,Assisted living,none,true,false,patient_declined,,,,mmHg
+SYN-087,Fictional Patient 087,1982-06-15,2026-10-01,Assisted living,transport,true,false,patient_declined,,,,mmHg
+SYN-088,Fictional Patient 088,1983-06-15,2026-10-01,Skilled nursing,none,true,false,patient_declined,,,,mmHg
+SYN-089,Fictional Patient 089,1984-06-15,2026-10-01,Skilled nursing,none,true,false,patient_declined,,,,mmHg
+SYN-090,Fictional Patient 090,1985-06-15,2026-10-01,Community,transport,true,false,patient_declined,,,,mmHg
+SYN-091,Fictional Patient 091,1986-06-15,2026-10-01,Community,none,true,false,completed,,,,mmHg
+SYN-092,Fictional Patient 092,1987-06-15,2026-10-01,Community,none,true,false,completed,,,,mmHg
+SYN-093,Fictional Patient 093,1988-06-15,2026-10-01,Community,transport,true,false,completed,,,,mmHg
+SYN-094,Fictional Patient 094,1989-06-15,2026-10-01,Assisted living,none,true,false,completed,,,,mmHg
+SYN-095,Fictional Patient 095,1990-06-15,2026-10-01,Assisted living,none,true,false,completed,,,,mmHg
+SYN-096,Fictional Patient 096,1991-06-15,2026-10-01,Assisted living,transport,true,false,completed,,,,mmHg
+SYN-097,Fictional Patient 097,1992-06-15,2026-10-01,Assisted living,none,true,false,completed,,,,mmHg
+SYN-098,Fictional Patient 098,1993-06-15,2026-10-01,Skilled nursing,none,true,false,completed,,,,mmHg
+SYN-099,Fictional Patient 099,1994-06-15,2026-10-01,Skilled nursing,transport,true,false,completed,,,,mmHg
+SYN-100,Fictional Patient 100,1945-06-15,2026-10-01,Community,none,true,false,completed,,,,mmHg
