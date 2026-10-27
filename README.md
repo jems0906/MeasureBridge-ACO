@@ -44,15 +44,6 @@ docker compose up --build
 
 Open `http://localhost:8080`; API health is at `http://localhost:8000/api/health`. PostgreSQL data persists in the `measurebridge-data` volume. Local demo credentials are not production secrets. This stack has no production authentication, authorization identity provider, PHI controls, backup policy, or deployment hardening.
 
-## Demonstration path
-
-1. Overview shows the constructed baseline of 60/100 (60%), the fixed denominator, unresolved items, provenance of changes, and reporting blockers.
-2. Care-gap queue separates missing documentation, uncompleted assessment, patient preference, data defect, and eligibility questions. Assignments record owner, role, due date, and barrier.
-3. Point of care captures a synthetic status and, when completed, a date and values with evidence and role. A workflow event appends to the record; the imported source is retained.
-4. The fixture-backed educational documentation workflow can move the 15 `not_documented` records to completed, producing 75/100 (75%), a constructed +15 percentage-point change. This is not a measured clinical improvement. Data repair and simulated care events are tracked separately.
-5. Equity view stratifies by facility setting or access barrier and suppresses small cells under 11, including complementary aggregate suppression.
-6. Reporting review freezes a versioned digest-backed snapshot, reconciles it, requires a different ACO Operations reviewer, and exports internal CSV/JSON. Unresolved results or open import errors block sign-off.
-
 ## Project map
 
 - `backend/app/services/measure_engine.py`: deterministic rule evaluation and denominator summary.
